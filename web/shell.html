@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NEON CITY — Play</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#050505;color:#eee;font:16px/1.8 system-ui,sans-serif}main{max-width:1320px;margin:auto;padding:32px 20px}h1{color:#0ff;letter-spacing:5px;text-shadow:0 0 14px #0aa;margin:0}button{border:1px solid #0ff;background:#052326;color:#0ff;padding:12px 24px;cursor:pointer;font:inherit;margin:12px 8px 12px 0}button:focus-visible,canvas:focus-visible{outline:2px solid #0ff;outline-offset:4px}canvas{display:block;width:100%;height:auto;background:#0c0f1e;border:1px solid #16747b}#status{color:#9ee}details{margin:24px 0}summary{cursor:pointer;color:#0ff}.note{color:#bbb;font-size:14px}
+  </style>
+</head>
+<body>
+<main>
+  <h1>NEON CITY</h1>
+  <p>PCのキーボードとマウスで遊ぶ2Dアクションゲーム。</p>
+  <button id="start" type="button">ゲームを起動</button>
+  <button id="reload" type="button">再読み込み</button>
+  <p id="status" role="status">起動ボタンを押すとゲームを読み込みます。</p>
+  <canvas id="canvas" width="1280" height="720" tabindex="0" aria-label="NEON CITY ゲーム画面"></canvas>
+  <details open>
+    <summary>操作方法</summary>
+    <p>WASD：移動 ／ マウス：照準 ／ 左クリック：射撃 ／ 右クリック：近接攻撃 ／ Shift：ダッシュ<br>
+    E：端末を開く・閉じる ／ ↑↓・Enter：選択・決定 ／ Esc：戻る<br>
+    拠点でP：セーブ ／ ミッション選択・結果画面でR：再生成・再挑戦</p>
+  </details>
+  <p class="note">ゲーム画面をクリックして操作してください。音が出ない場合は画面をクリックしてください。セーブはこのブラウザに保存されます。プライベートモードや保存制限により保存できない場合があります。別端末とは共有されません。</p>
+</main>
+<script>
+  const canvas = document.getElementById('canvas');
+  const status = document.getElementById('status');
+  const start = document.getElementById('start');
+  canvas.addEventListener('contextmenu', event => event.preventDefault());
+  canvas.addEventListener('pointerdown', () => canvas.focus());
+  canvas.addEventListener('keydown', event => {
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','F5'].includes(event.key)) event.preventDefault();
+  });
+  document.getElementById('reload').addEventListener('click', () => location.reload());
+  var Module = {
+    canvas: canvas,
+    noInitialRun: true,
+    setStatus(text) { if (text) status.textContent = text; },
+    onRuntimeInitialized() {
+      start.disabled = false;
+      start.textContent = 'プレイ開始';
+      status.textContent = '準備完了。「プレイ開始」を押してください。';
+      start.onclick = () => {
+        start.disabled = true;
+        canvas.focus();
+        status.textContent = 'プレイ中。終了後は「再読み込み」で起動できます。';
+        Promise.resolve(Module.ccall('main', 'number', [], [], {async: true}))
+          .then(() => { status.textContent = 'ゲームを終了しました。「再読み込み」で再開できます。'; })
+          .catch(() => Module.onAbort());
+      };
+    },
+    onAbort() { status.textContent = '起動できませんでした。「再読み込み」でやり直してください。'; },
+    onExit() { status.textContent = 'ゲームを終了しました。「再読み込み」で再開できます。'; }
+  };
+  start.onclick = () => {
+    start.disabled = true;
+    status.textContent = 'ゲームを読み込んでいます…';
+    const script = document.createElement('script');
+    script.src = 'index.js';
+    script.onerror = () => { status.textContent = '読み込みに失敗しました。「再読み込み」でやり直してください。'; };
+    document.body.appendChild(script);
+  };
+</script>
+<!-- Emscripten replaces this marker; the script is loaded on demand above. -->
+<template>{{{ SCRIPT }}}</template>
+</body>
+</html>
