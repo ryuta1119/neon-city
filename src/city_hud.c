@@ -63,13 +63,19 @@ static void DrawMiniMap(const TileMap *map, Vector2 player,
 void CityHUDDrawHub(const Economy *economy, const Player *player,
                     const TileMap *map, bool showSave, bool saveSuccess)
 {
-    Panel(16, 16, 337, 133, HUD_TEAL);
-    DrawText("N / CITY", 36, 27, 31, WHITE);
+    Panel(16, 16, 337, 154, HUD_TEAL);
+    DrawText("NEON CITY", 36, 27, 31, WHITE);
     DrawText("CENTRAL HUB  /  NIGHT DISTRICT", 36, 68, 16, HUD_TEAL);
-    DrawText(TextFormat("CREDITS  %d CR", economy->credits),
-             36, 96, 22, HUD_GOLD);
+
+    // Keep credits and contracts on separate rows; fit the full credit range.
+    char creditsText[64];
+    snprintf(creditsText, sizeof(creditsText), "CREDITS  %d CR", economy->credits);
+    int creditsFontSize = 22;
+    while (creditsFontSize > 14 && MeasureText(creditsText, creditsFontSize) > 297)
+        creditsFontSize--;
+    DrawText(creditsText, 36, 96, creditsFontSize, HUD_GOLD);
     DrawText(TextFormat("CONTRACTS %d", economy->completedMissions),
-             220, 107, 14, HUD_SOFT);
+             36, 132, 16, HUD_SOFT);
 
     DrawMiniMap(map, player->position, 1085, 16, false);
 
